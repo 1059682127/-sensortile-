@@ -1,0 +1,427 @@
+
+int PWA2A=11,PWA2B=3,PWA0A=6,PWA0B=5;
+int PWA1B=10;
+int DIR_CLK=4;
+int DIR_EN=7;
+int DIR_SER=8;
+int DIR_LATCH=12;//新l293d 8次移位 四个电机转动 
+int  photovc=2;
+int i,j;
+float Left,Middle, Right;
+float lefttemp,righttemp;   //0404 2016
+int val1,val2;
+
+
+float L=45,M=55,R=45;
+int  turnValue=20;
+#include <NewPing.h>
+#define TRIGGER_PIN  A0  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     A2  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+int analogPin_Left=A4;
+int analogPin_Right=A5;
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+#include <Servo.h> 
+#include <SoftwareSerial.h>
+SoftwareSerial softSerial(9,13);
+int led-T=14;
+int led-H=15;
+
+
+Servo myservo;  // create servo object to control a servo 
+                // a maximum of eight servo objects can be created 
+ 
+int pos = 0;    // variable to store the servo position 
+ 
+void setup()
+{
+  pinMode(PWA2A,OUTPUT);
+   pinMode(DIR_CLK,OUTPUT);
+   pinMode( DIR_EN,OUTPUT);
+   pinMode(DIR_SER,OUTPUT);
+   pinMode(DIR_LATCH,OUTPUT);
+  // pinMode(photovc,OUTPUT);
+    myservo.attach(10); 
+    pinMode(10,OUTPUT);
+//pinMode(photoPin, INPUT);
+ Serial.begin(115200); // Open serial monitor at 115200 baud to see ping results.
+ delay(150);
+ softSerial.begin(9600);
+ softSerial.listen();
+ pinMode(14,OUTPUT);
+ pinMode(15,OUTPUT);
+}
+void loop()
+{
+  String inStringA="";
+  String inStringB=""
+  while((softSerial.available()>0))
+  {
+    if(softSerial.read()='T')
+    {
+      inStringA+=(char)softSerial.read();
+      delay(5);
+    }
+    else if(softSerial.read()='H')
+    {
+      inStringB+=(char)softSerial.read();
+      delay(5);
+    }
+  }
+  if(inStringA>=28 && <=35)
+  {
+    digitalWrite(led-T,HIGH);
+  }
+  else if(inStringA<=28 || >=35)
+  {
+    digitalWrite(led-T,LOW);
+  }
+  if(inStringB>=75 && <=85)
+  {
+    digitalWrite(led-H,HIGH);
+  }
+  else if(inStringA<=75 || >=85)
+  {
+    digitalWrite(led-H,LOW);
+  }
+  
+  int val=0;
+  float vol;
+  digitalWrite(PWA2A,HIGH);
+  digitalWrite(PWA2B,HIGH);
+  digitalWrite(PWA0A,HIGH);
+  digitalWrite(PWA0B,HIGH);
+  digitalWrite(DIR_EN,LOW);
+  digitalWrite(DIR_LATCH,LOW);
+  for(i=0;i<9;i++)
+  {
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  }   //QING 0
+  
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//1
+
+ digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//2
+   digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//3
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//4
+  
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//5
+  
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//6
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//7
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//8
+   
+   digitalWrite(DIR_LATCH,HIGH);
+   delay(30);  //YOU  XIU  GAI   0314
+  
+     for(pos = 0; pos<=60; pos+= 3)  // goes from 0 degrees to 180 degrees                    1---->3      04042016
+  {                                  // in steps of 1 degree 
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(6);
+                // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
+  unsigned int uS = sonar.ping(); // Send ping, get ping time in microseconds (μS).
+  Serial.print("Ping: ");
+  Middle=sonar.convert_cm(uS);
+  Serial.print( Middle); // Convert ping time to distance and print result (0 = outside set distance range, no ping echo)
+  Serial.println("cm");
+  if(Middle<40&&Middle>=0) break;    //55-->40(20161005)
+  }
+  
+   /*if(Right<28&&Left<28)
+   if((lefttemp<=(Left+3)&&lefttemp>=(Left-3))&&(righttemp<=(Right+3)&&righttemp>=(Right-3)))   //防止一直左转或右转  0405 lingcheng  left  right!!! 未赋值 1005
+   {
+     turnBack();
+     carstop();                  //3.18晚增加   与库函数stop冲突
+     turnLeft();
+   }*/
+
+      // ||(Right<30&&Left>40))
+ /*if(pos<20&&pos>=0&&Middle<M&&Middle>15)   //ZUOZHUAN    20160404修改转弯条件  M大于一定值转弯，避免总是满足转弯条件，却转不动*/
+ if(pos<20&&pos>=0&&Middle<turnValue) 
+  {
+    turnLeft();
+   } 
+   
+  /*||(Left<30&&Right>40)*/
+ if(pos<=60&&pos>40&&Middle<turnValue)     //YOUZHUAN   20160404修改转弯条件  M大于一定值转弯，避免总是满足转弯条件，却转不动
+  {
+    turnRight();
+   }     
+   
+   if (Middle<25&&Middle>1)      //HOUTUI 有修改  距离更小再后退  ||(val1>550&&val2>550)  0619大轮车修改为25
+  {
+   turnBack();
+   carstop();                  //3.18晚增加   与库函数stop冲突
+ } 
+    
+  
+   //旋转的方向和响应时间还有问题
+for(; pos>=20; pos-=2)     // goes from 180 degrees to 0 degrees  -1  --->  -2   20160404
+  {                                
+    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(15);                       // waits 15ms for the servo to reach the position 
+  } 
+ 
+}
+
+
+void turnBack()
+{
+ digitalWrite(DIR_LATCH,LOW);
+   digitalWrite(10,LOW);
+  for(i=0;i<9;i++)
+    {
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+    }
+   //QING 0
+   for(i=0;i<8;i++)
+   {
+  digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//1
+
+ digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//2
+   digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//3
+    digitalWrite(DIR_SER,HIGH);   //YOUXIUGAI  20150316
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//4
+  
+    digitalWrite(DIR_SER,HIGH);   //YOUXIUGAI
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//5
+  
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//6
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//7
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//8
+   
+   digitalWrite(DIR_LATCH,HIGH);
+   digitalWrite(photovc,HIGH);
+   delay(200);     // 200------>250
+   /*   if(digitalRead(photoPin)==LOW)
+       {break;}    */
+   }    
+}
+
+void turnLeft()
+{
+  digitalWrite(DIR_LATCH,LOW);
+  digitalWrite(10,LOW);
+  for(i=0;i<9;i++)
+    {
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+    }
+   //QING 0 
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//1
+
+ digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//2
+   digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//3
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//4
+  
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//5
+  
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//6
+  
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//7
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//8
+   digitalWrite(DIR_LATCH,HIGH);
+   delay(2500);            //2500---->1500    --->2500  0406  
+  /* if(digitalRead(photoPin==LOW))
+   {
+     delay(1);
+   }
+   else
+   {delay(5000);} */
+}
+
+void turnRight()
+{
+  digitalWrite(DIR_LATCH,LOW);
+  digitalWrite(10,LOW);
+  for(i=0;i<9;i++)
+    {
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+    }
+   //QING 0
+   
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//1
+
+ digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//2
+   digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//3
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//4
+  
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//5
+  
+    digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//6
+  
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//7
+    digitalWrite(DIR_SER,HIGH);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+  delay(1);//8
+   digitalWrite(DIR_LATCH,HIGH);
+   delay(2500);     // 0406
+  /* if(digitalRead(photoPin)==LOW)
+   {
+     delay(1);
+   }
+   else
+   {delay(5000);} */
+}
+
+void carstop()
+{
+  digitalWrite(DIR_LATCH,LOW);
+   digitalWrite(10,LOW);
+  for(i=0;i<9;i++)
+    {
+  digitalWrite(DIR_SER,LOW);
+  digitalWrite(DIR_CLK,LOW);
+  delay(1);
+  digitalWrite(DIR_CLK,HIGH);
+    }
+    delay(3000);
+}    
+
+void carslowdown()
+{
+    digitalWrite(PWA2A,HIGH);
+  digitalWrite(PWA2B,HIGH);
+  digitalWrite(PWA0A,HIGH);
+  digitalWrite(PWA0B,HIGH);
+    delay(2000);
+}    
+ 
+  
+
+
